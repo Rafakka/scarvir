@@ -3,6 +3,8 @@ import qrcode
 import psycopg2
 from datetime import datetime
 
+from qr_scanner import ler_qr_imagem
+
 # Função para garantir que a pasta existe
 def garantir_pasta(caminho):
     if not os.path.exists(caminho):
@@ -10,8 +12,8 @@ def garantir_pasta(caminho):
 
 def cadastrar_pessoa():
     nome = input("Nome: ")
-    dob = input("Data de nascimento (YYYY-MM-DD): ")
-    id_documento = input("ID do documento: ")
+    dob = input("Data de nascimento (DIA-2D-MES-2D-ANO-4D): ")
+    id_documento = input("ID do documento(CPF): ")
 
     try:
         conn = psycopg2.connect(
@@ -51,3 +53,7 @@ def cadastrar_pessoa():
 
 if __name__ == "__main__":
     cadastrar_pessoa()
+    
+    caminho = input("Digite o caminho da imagem do QR Code: ")
+    conteudo = ler_qr_imagem(caminho)
+    print("Conteúdo do QR:", conteudo)
