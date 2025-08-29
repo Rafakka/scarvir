@@ -1,6 +1,7 @@
 from gerenciador_db import get_pessoa_por_id
-from qr_cam_scanner import ler_qr_camera
-from qr_scanner import ler_qr_imagem
+from scanners.qr_cam_scanner import ler_qr_camera
+from scanners.qr_scanner import ler_qr_imagem
+
 
 
 mode = input("Deseja ler QR de imagem(i) ou câmera(c)?")
