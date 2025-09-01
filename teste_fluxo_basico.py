@@ -1,64 +1,68 @@
-from gerenciador_formulario import cadastrar_pessoa
-from gerenciador_db import (
-    get_pessoa_por_qr_imagem,
-    get_pessoa_por_qr_camera,
-    get_pessoa_por_cpf
-)
+import os
 from scanners.qr_generator import gerar_qr_usuario
-from security.fernet_key import get_cipher
+from scanners.qr_scanner import ler_qr_imagem
+from scanners.qr_cam_scanner import ler_qr_camera
+from security.fernet_key import carregar_chave
+from datetime import datetime
+
+# Função auxiliar para formatar data
+def formatar_data(dob_str):
+    partes = dob_str.strip().split("/")
+    if len(partes) != 3:
+        raise ValueError("Formato inválido. Use DD/MM/AAAA")
+    dia, mes, ano = partes
+    return f"{ano.zfill(4)}-{mes.zfill(2)}-{dia.zfill(2)}"
 
 def teste_fluxo():
     print("\n--- Teste de fluxo completo ---\n")
 
-    # 1️⃣ Cadastro de nova pessoa
+    # Cadastro de pessoa
     print("Cadastro de nova pessoa:")
-    usuario = cadastrar_pessoa()  # retorna tuple ou dict conforme sua função
-    cipher = get_cipher()
-    
-    # Gera QR cifrado
-    qr_path = gerar_qr_usuario(usuario, cipher)
-    print(f"\nQR Code gerado em: {qr_path}")
+    nome = input("Nome: ").strip()
+    dob = input("Data de nascimento (DD/MM/AAAA): ").strip()
+    cpf = input("ID do documento (CPF): ").strip()
+    dob_formatada = formatar_data(dob)
 
-    # 2️⃣ Leitura de QR Code
-    try:
-        escolha = input("Ler QR Code do usuário (1=imagem, 2=câmera): ").strip()
-        if escolha == "1":
-            caminho = input("Digite o caminho da imagem do QR Code: ").strip()
-            pessoa = get_pessoa_por_qr_imagem(caminho)
-        elif escolha == "2":
-            pessoa = get_pessoa_por_qr_camera()
-        else:
-            pessoa = None
-    except Exception as e:
-        print("Erro ao ler QR Code:", e)
-        pessoa = None
+    # Gerar id_curto aleatório
+    import random, string
+    id_curto = "".join(random.choices(string.hexdigits.lower(), k=8))
 
-    # 3️⃣ Fallback por CPF se QR inválido
-    if not pessoa:
-        print("\nQR não encontrado ou inválido. Fallback por CPF.")
-        cpf = input("Digite o CPF da pessoa: ").strip()
-        pessoa = get_pessoa_por_cpf(cpf)
+    data_usuario = {
+        "id_curto": id_curto,
+        "nome": nome,
+        "cpf": cpf
+    }
 
-    # 4️⃣ Exibe dados
-    if pessoa:
-        if isinstance(pessoa, tuple):
-            # tupla do DB -> dict para exibição
-            pessoa_dict = {
-                "id": pessoa[0],
-                "nome": pessoa[1],
-                "dob": pessoa[2],
-                "cpf": pessoa[3],
-                "data_de_criacao": pessoa[4],
-                "id_curto": pessoa[5],
-            }
-        else:
-            pessoa_dict = pessoa
+    # Gerar QR cifrado
+    key = carregar_chave()   # bytes
+    from cryptography.fernet import Fernet
+    cipher = Fernet(key)      # objeto Fernet
 
-        print("\n✅ Usuário encontrado com sucesso!")
-        for k, v in pessoa_dict.items():
-            print(f"{k}: {v}")
+    pasta_qr = "qrcodes"
+    os.makedirs(pasta_qr, exist_ok=True)
+    qr_path = os.path.join(pasta_qr, f"{id_curto}.png")
+    gerar_qr_usuario(data_usuario, cipher, qr_path)
+
+    print("\n✅ Pessoa cadastrada com sucesso!")
+    print(f"ID curto: {id_curto}")
+    print(f"QR Code cifrado gerado em: {qr_path}")
+
+    # Teste leitura QR Code
+    escolha = input("\nLer QR Code do usuário (1=imagem, 2=câmera): ").strip()
+    if escolha == "1":
+        caminho = input("Digite o caminho da imagem do QR Code: ").strip()
+        dados_qr = ler_qr_imagem(caminho)
+    elif escolha == "2":
+        dados_qr = ler_qr_camera()
     else:
-        print("\n❌ Usuário não encontrado!")
+        print("Opção inválida.")
+        return
+
+    if dados_qr:
+        print("\n✅ QR lido com sucesso! Conteúdo:")
+        print(dados_qr)
+    else:
+        print("\n❌ QR não encontrado ou inválido.")
 
 if __name__ == "__main__":
     teste_fluxo()

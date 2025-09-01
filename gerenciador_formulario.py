@@ -3,6 +3,7 @@ import psycopg2
 from datetime import datetime
 from scanners.qr_generator import gerar_qr_usuario
 from security.fernet_key import carregar_chave
+from cryptography.fernet import Fernet
 from dotenv import load_dotenv
 
 # Carrega variáveis do .env
@@ -54,9 +55,10 @@ def cadastrar_pessoa():
         os.makedirs(pasta_qr, exist_ok=True)
 
         # Gerar QR cifrado
-        cipher = carregar_chave()
+        key = carregar_chave()   # bytes
+        cipher = Fernet(key)
         data_usuario = {"id_curto": id_curto, "nome": nome, "cpf": cpf}
-        qr_path = os.path.join(pasta_qr, f"{id_curto}.png")
+        qr_path = gerar_qr_usuario(data_usuario, cipher)
         gerar_qr_usuario(data_usuario, cipher, qr_path)
 
         usuario_dict = {
