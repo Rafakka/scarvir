@@ -20,6 +20,6 @@ def carregar_chave():
     return key
 
 def get_cipher():
-    """Retorna o objeto Fernet já inicializado"""
+    """Retorna objeto Fernet configurado com a chave"""
     key = carregar_chave()
     return Fernet(key)

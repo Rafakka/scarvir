@@ -1,14 +1,10 @@
 import cv2
-from pyzbar.pyzbar import decode
-from cryptography.fernet import Fernet
 import json
-import os
+from pyzbar.pyzbar import decode
+from security.fernet_key import get_cipher
 
-# Carrega chave Fernet
-KEY_PATH = os.path.join(os.path.dirname(__file__), "secret.key")
-with open(KEY_PATH, "rb") as f:
-    key = f.read()
-cipher = Fernet(key)
+# Carrega o cipher Fernet centralizado
+cipher = get_cipher()
 
 def ler_qr_camera():
     """
