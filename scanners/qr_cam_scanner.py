@@ -1,35 +1,25 @@
-# scanners/qr_scanner.py
 from pyzbar.pyzbar import decode
 from PIL import Image
-import cv2
+import json
+from cryptography.fernet import Fernet
 
-# --------------------------------------
-# Lê QR usando a câmera
-# --------------------------------------
-def ler_qr_camera(camera_index=0):
+def carregar_chave(caminho="secret.key"):
+    with open(caminho, "rb") as f:
+        key = f.read()
+    return Fernet(key)
+
+def ler_qr_imagem(caminho_imagem):
     try:
-        cap = cv2.VideoCapture(camera_index)
-        print("Aponte o QR Code para a câmera... (Pressione 'q' para sair)")
-        qr_data = None
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                continue
-
-            decoded_objects = decode(frame)
-            for obj in decoded_objects:
-                qr_data = obj.data.decode("utf-8")
-                print("QR Code detectado:", qr_data)
-                break
-
-            cv2.imshow("QR Scanner", frame)
-            if qr_data or cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-
-        cap.release()
-        cv2.destroyAllWindows()
-        return qr_data
-
+        img = Image.open(caminho_imagem)
+        result = decode(img)
+        if result:
+            qr_data = result[0].data
+            cipher = carregar_chave()
+            decrypted_bytes = cipher.decrypt(qr_data)
+            data = json.loads(decrypted_bytes)
+            return data
+        else:
+            return None
     except Exception as e:
-        print("Erro ao ler QR da câmera:", e)
+        print("Erro ao decodificar QR Code:", e)
         return None
