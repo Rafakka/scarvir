@@ -1,6 +1,7 @@
 import psycopg2
 import json
-from scanners.qr_scanner import ler_qr_imagem, ler_qr_camera
+from scanners.qr_scanner import ler_qr_imagem 
+from scanners.qr_cam_scanner import ler_qr_camera
 
 # Configurações do banco
 DB_NAME = "postgres"

@@ -3,7 +3,9 @@ import qrcode
 import psycopg2
 import json
 
-from gerenciador_db import get_pessoa_por_id
+from scanners.qr_scanner import ler_qr_imagem
+from scanners.qr_cam_scanner import ler_qr_camera
+from gerenciador_db import get_pessoa_por_qr_imagem, get_pessoa_por_qr_camera
 
 # Configurações do banco
 DB_NAME = "postgres"
@@ -103,6 +105,39 @@ def cadastrar_pessoa():
     except Exception as e:
         print("Erro:", e)
 
+def formulario_usuario():
+    # Pergunta se quer usar imagem ou câmera
+    metodo = input("Ler QR Code do usuário (1=imagem, 2=câmera): ").strip()
+    if metodo == "1":
+        caminho = input("Digite o caminho da imagem do QR Code: ").strip()
+        if not caminho.endswith(".png"):
+            caminho += ".png"
+        pessoa = get_pessoa_por_qr_imagem(caminho)
+    else:
+        pessoa = get_pessoa_por_qr_camera()
+
+    if not pessoa:
+        print("❌ Usuário não encontrado!")
+        return None
+
+    # Mostrar dados do usuário
+    id, id_curto, nome, dob, cpf, criado = pessoa
+    print("\n✅ Usuário encontrado:")
+    print(f"ID curto: {id_curto}")
+    print(f"Nome: {nome}")
+    print(f"Data de nascimento: {dob}")
+    print(f"CPF: {cpf}")
+    print(f"Criado em: {criado}")
+
+    # Perguntar se a pessoa vai vacinar
+    vai_vacinar = input("\nA pessoa vai vacinar hoje? (s/n): ").strip().lower()
+    if vai_vacinar != "s":
+        print("Encerrando atendimento.")
+        return None
+
+    return pessoa
+
+
 if __name__ == "__main__":
     cadastrar_pessoa()
-    get_pessoa_por_id()
+    formulario_usuario()
