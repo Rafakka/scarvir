@@ -1,29 +1,29 @@
 from pyzbar.pyzbar import decode
 from PIL import Image
-import json
 from cryptography.fernet import Fernet
+import json
+import os
 
-def carregar_chave(caminho="secret.key"):
-    with open(caminho, "rb") as f:
-        key = f.read()
-    return Fernet(key)
+KEY_PATH = os.path.join(os.path.dirname(__file__), "secret.key")
+with open(KEY_PATH, "rb") as f:
+    key = f.read()
+cipher = Fernet(key)
 
 def ler_qr_imagem(caminho_imagem):
+    """
+    Lê QR Code de uma imagem, decifra com Fernet e retorna dict com os dados.
+    """
     try:
         img = Image.open(caminho_imagem)
         result = decode(img)
-        if result:
-            qr_data = result[0].data
-            # Se for dict (QR antigo não cifrado), retorna direto
-            if isinstance(qr_data, dict):
-                return qr_data
-            # Caso seja bytes cifrados
-            cipher = carregar_chave()
-            decrypted_bytes = cipher.decrypt(qr_data)
-            data = json.loads(decrypted_bytes)
-            return data
-        else:
+        if not result:
+            print("Nenhum QR Code detectado na imagem")
             return None
+
+        dados_cifrados = result[0].data  # bytes cifrados do QR
+        json_bytes = cipher.decrypt(dados_cifrados)  # decifra
+        dados = json.loads(json_bytes)  # bytes -> dict
+        return dados
     except Exception as e:
-        print("Erro ao decodificar QR Code:", e)
+        print("Erro ao ler QR da imagem:", e)
         return None
