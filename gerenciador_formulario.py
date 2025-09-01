@@ -3,47 +3,60 @@ import qrcode
 import psycopg2
 from datetime import datetime
 
-from qr_scanner import ler_qr_imagem
+# Configurações do banco
+DB_NAME = "postgres"
+DB_USER = "postgres"
+DB_PASSWORD = "link217"
+DB_HOST = "localhost"
 
 # Função para garantir que a pasta existe
 def garantir_pasta(caminho):
     if not os.path.exists(caminho):
         os.makedirs(caminho)
 
+# Formata data de nascimento DD/MM/AAAA -> YYYY-MM-DD (PostgreSQL)
+def formatar_data(dob_str):
+    dia, mes, ano = dob_str.split("/")
+    return f"{ano}-{mes}-{dia}"
+
+# Função principal de cadastro
 def cadastrar_pessoa():
-    nome = input("Nome: ")
-    dob = input("Data de nascimento (DIA-2D-MES-2D-ANO-4D): ")
-    id_documento = input("ID do documento(CPF): ")
+    nome = input("Nome: ").strip()
+    dob = input("Data de nascimento (DD/MM/AAAA): ").strip()
+    cpf = input("ID do documento (CPF): ").strip()
+
+    dob_formatada = formatar_data(dob)
 
     try:
         conn = psycopg2.connect(
-            dbname="postgres",
-            user="postgres",
-            password="link217",
-            host="localhost"
+            dbname=DB_NAME,
+            user=DB_USER,
+            password=DB_PASSWORD,
+            host=DB_HOST
         )
         cur = conn.cursor()
 
-        # insere pessoa e retorna id gerado
+        # Insere pessoa com id_curto gerado pelo banco (função substring(md5(UUID)) do PostgreSQL)
         cur.execute("""
-            INSERT INTO pessoas (nome, dob, id_documento, data_de_criacao)
-            VALUES (%s, %s, %s, NOW())
-            RETURNING id;
-        """, (nome, dob, id_documento))
+            INSERT INTO pessoas (nome, dob, id_documento, data_de_criacao, id_curto)
+            VALUES (%s, %s, %s, NOW(), substring(md5(gen_random_uuid()::text) FROM 1 FOR 8))
+            RETURNING id_curto;
+        """, (nome, dob_formatada, cpf))
 
-        pessoa_id = cur.fetchone()[0]
+        id_curto = cur.fetchone()[0]
         conn.commit()
 
-        # Garantir que a pasta existe
+        # Gera QR Code
         pasta_qr = "qrcodes"
         garantir_pasta(pasta_qr)
 
-        # Gerar QR Code
-        qr = qrcode.make(str(pessoa_id))
-        qr_path = os.path.join(pasta_qr, f"{pessoa_id}.png")
+        qr = qrcode.make(id_curto)
+        qr_path = os.path.join(pasta_qr, f"{id_curto}.png")
         qr.save(qr_path)
 
-        print(f"Pessoa cadastrada com ID {pessoa_id}. QR Code gerado em {qr_path}")
+        print(f"\n✅ Pessoa cadastrada com sucesso!")
+        print(f"ID curto: {id_curto}")
+        print(f"QR Code gerado em: {qr_path}")
 
         cur.close()
         conn.close()
@@ -53,7 +66,3 @@ def cadastrar_pessoa():
 
 if __name__ == "__main__":
     cadastrar_pessoa()
-    
-    caminho = input("Digite o caminho da imagem do QR Code: ")
-    conteudo = ler_qr_imagem(caminho)
-    print("Conteúdo do QR:", conteudo)
