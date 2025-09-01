@@ -1,7 +1,9 @@
 import os
 import qrcode
 import psycopg2
-from datetime import datetime
+import json
+
+from gerenciador_db import get_pessoa_por_id
 
 # Configurações do banco
 DB_NAME = "postgres"
@@ -14,19 +16,45 @@ def garantir_pasta(caminho):
     if not os.path.exists(caminho):
         os.makedirs(caminho)
 
-# Formata data de nascimento DD/MM/AAAA -> YYYY-MM-DD (PostgreSQL)
+# Formata e valida a data de nascimento
 def formatar_data(dob_str):
-    dia, mes, ano = dob_str.split("/")
-    return f"{ano}-{mes}-{dia}"
+    try:
+        partes = dob_str.strip().split("/")
+        if len(partes) != 3:
+            raise ValueError("Formato inválido. Use DD/MM/AAAA")
+        dia, mes, ano = partes
+        if not (dia.isdigit() and mes.isdigit() and ano.isdigit()):
+            raise ValueError("Data deve conter apenas números")
+        return f"{ano.zfill(4)}-{mes.zfill(2)}-{dia.zfill(2)}"
+    except Exception as e:
+        print("Erro ao formatar data:", e)
+        return None
 
 # Função principal de cadastro
 def cadastrar_pessoa():
-    nome = input("Nome: ").strip()
-    dob = input("Data de nascimento (DD/MM/AAAA): ").strip()
-    cpf = input("ID do documento (CPF): ").strip()
+    # --- Nome ---
+    while True:
+        nome = input("Nome: ").strip()
+        if nome:
+            break
+        print("❌ Nome não pode ser vazio")
 
-    dob_formatada = formatar_data(dob)
+    # --- Data de nascimento ---
+    while True:
+        dob = input("Data de nascimento (DD/MM/AAAA): ").strip()
+        dob_formatada = formatar_data(dob)
+        if dob_formatada:
+            break
+        print("❌ Formato inválido, tente novamente.")
 
+    # --- CPF ---
+    while True:
+        cpf = input("ID do documento (CPF): ").strip()
+        if cpf:
+            break
+        print("❌ CPF não pode ser vazio")
+
+    # --- Conexão com o banco ---
     try:
         conn = psycopg2.connect(
             dbname=DB_NAME,
@@ -36,7 +64,7 @@ def cadastrar_pessoa():
         )
         cur = conn.cursor()
 
-        # Insere pessoa com id_curto gerado pelo banco (função substring(md5(UUID)) do PostgreSQL)
+        # Insere pessoa com id_curto gerado pelo banco
         cur.execute("""
             INSERT INTO pessoas (nome, dob, id_documento, data_de_criacao, id_curto)
             VALUES (%s, %s, %s, NOW(), substring(md5(gen_random_uuid()::text) FROM 1 FOR 8))
@@ -46,17 +74,28 @@ def cadastrar_pessoa():
         id_curto = cur.fetchone()[0]
         conn.commit()
 
-        # Gera QR Code
+        # --- Gera QR Code com JSON ---
         pasta_qr = "qrcodes"
         garantir_pasta(pasta_qr)
 
-        qr = qrcode.make(id_curto)
+        # Cria um dicionário com os dados que queremos no QR
+        dados_qr = {
+            "id_curto": id_curto,
+            "nome": nome,
+            "cpf": cpf
+        }
+
+        # Converte para string JSON
+        qr_json = json.dumps(dados_qr, ensure_ascii=False)
+
+        qr = qrcode.make(qr_json)
         qr_path = os.path.join(pasta_qr, f"{id_curto}.png")
         qr.save(qr_path)
 
         print(f"\n✅ Pessoa cadastrada com sucesso!")
         print(f"ID curto: {id_curto}")
         print(f"QR Code gerado em: {qr_path}")
+        print(f"Conteúdo do QR: {qr_json}")
 
         cur.close()
         conn.close()
@@ -66,3 +105,4 @@ def cadastrar_pessoa():
 
 if __name__ == "__main__":
     cadastrar_pessoa()
+    get_pessoa_por_id()

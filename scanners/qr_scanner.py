@@ -1,6 +1,10 @@
 from pyzbar.pyzbar import decode
 from PIL import Image
 
+# --------------------------------------
+# Lê QR de uma imagem
+# --------------------------------------
+
 def ler_qr_imagem(caminho_imagem):
     try:
         img = Image.open(caminho_imagem)
@@ -10,5 +14,5 @@ def ler_qr_imagem(caminho_imagem):
         else:
             return None
     except Exception as e:
-        print("Erro ao ler QR:", e)
+        print("Erro ao ler QR da imagem:", e)
         return None
