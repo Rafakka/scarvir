@@ -22,12 +22,15 @@ def conectar_bd():
         print("Erro ao conectar no BD:", e)
         return None
 
+    
 def cadastrar_vacina():
+    """Cadastra uma vacina manualmente no banco."""
     nome = input("Nome da vacina: ").strip()
     fabricante = input("Fabricante: ").strip()
-    validade = input("Validade (AAAA-MM-DD): ").strip()
     lote = input("Lote: ").strip()
-    vacinador = input("Vacinador: ").strip()
+    validade = input("Validade (AAAA-MM-DD): ").strip()
+    vacinador = input("Vacinador responsável: ").strip()
+    doses_necessarias = input("Número total de doses necessárias: ").strip()
 
     conn = conectar_bd()
     if not conn:
@@ -36,16 +39,16 @@ def cadastrar_vacina():
     try:
         cur = conn.cursor()
         cur.execute("""
-            INSERT INTO vacinas (nome, fabricante, validade, lote, vacinador)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO vacinas (nome, fabricante, lote, validade, vacinador, doses_necessarias)
+            VALUES (%s, %s, %s, %s, %s, %s)
             RETURNING id;
-        """, (nome, fabricante, validade, lote, vacinador))
+        """, (nome, fabricante, lote, validade, vacinador, doses_necessarias))
+        vac_id = cur.fetchone()[0]
         conn.commit()
-        id_vacina = cur.fetchone()[0]
         cur.close()
         conn.close()
-        print(f"✅ Vacina '{nome}' cadastrada com sucesso! ID: {id_vacina}")
-        return id_vacina
+        print(f"\n✅ Vacina cadastrada com sucesso! ID: {vac_id}")
+        return vac_id
     except Exception as e:
         print("Erro ao cadastrar vacina:", e)
         return None

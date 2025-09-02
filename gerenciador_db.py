@@ -30,9 +30,25 @@ def conectar_bd():
         print("Erro ao conectar ao banco:", e)
         return None
 
+
+def _dict_pessoa(row):
+    if not row:
+        return None
+    return {
+        "id": row[0],
+        "nome": row[1],
+        "dob": row[2],
+        "id_documento": row[3],
+        "data_de_criacao": row[4],
+        "id_curto": row[5],
+        "consentimento": row[6],
+        "consentimento_data": row[7]
+    }
+
 # -----------------------------
 # Funções de busca no banco
 # -----------------------------
+
 def get_pessoa_por_id_curto(id_curto):
     conn = conectar_bd()
     if not conn:
@@ -40,16 +56,16 @@ def get_pessoa_por_id_curto(id_curto):
     try:
         cur = conn.cursor()
         cur.execute("""
-            SELECT id, nome, dob, id_documento, data_de_criacao, id_curto
+            SELECT id, nome, dob, id_documento, data_de_criacao, id_curto, consentimento, consentimento_data
             FROM pessoas
             WHERE id_curto = %s
         """, (id_curto,))
-        pessoa = cur.fetchone()
+        row = cur.fetchone()
         cur.close()
         conn.close()
-        return pessoa
+        return _dict_pessoa(row)
     except Exception as e:
-        print("Erro ao buscar pessoa pelo id_curto:", e)
+        print("Erro ao buscar pessoa pelo ID curto:", e)
         return None
 
 def get_pessoa_por_cpf(cpf):
@@ -59,17 +75,18 @@ def get_pessoa_por_cpf(cpf):
     try:
         cur = conn.cursor()
         cur.execute("""
-            SELECT id, nome, dob, id_documento, data_de_criacao, id_curto
+            SELECT id, nome, dob, id_documento, data_de_criacao, id_curto, consentimento, consentimento_data
             FROM pessoas
             WHERE id_documento = %s
         """, (cpf,))
-        pessoa = cur.fetchone()
+        row = cur.fetchone()
         cur.close()
         conn.close()
-        return pessoa
+        return _dict_pessoa(row)
     except Exception as e:
         print("Erro ao buscar pessoa pelo CPF:", e)
         return None
+
 
 # -----------------------------
 # Função genérica para decodificar QR
@@ -77,6 +94,7 @@ def get_pessoa_por_cpf(cpf):
 def get_pessoa_por_qr(conteudo_qr):
     if not conteudo_qr:
         return None
+
     # Se for string (JSON decodificado do QR cifrado), converte para dict
     if isinstance(conteudo_qr, str):
         try:
@@ -84,11 +102,19 @@ def get_pessoa_por_qr(conteudo_qr):
         except Exception as e:
             print("Erro ao decodificar QR JSON:", e)
             return None
+
     id_curto = conteudo_qr.get("id_curto")
     if not id_curto:
         print("ID curto não encontrado no QR Code")
         return None
-    return get_pessoa_por_id_curto(id_curto)
+
+    # Busca a pessoa pelo ID curto (já retorna dict)
+    pessoa = get_pessoa_por_id_curto(id_curto)
+    if not pessoa:
+        print("Pessoa não encontrada no banco para este ID curto")
+        return None
+
+    return pessoa
 
 # -----------------------------
 # Funções específicas de leitura
@@ -106,3 +132,4 @@ def get_pessoa_por_qr_camera():
         print("Nenhum QR Code detectado na câmera")
         return None
     return get_pessoa_por_qr(conteudo_qr)
+
