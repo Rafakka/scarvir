@@ -5,18 +5,17 @@ from security.fernet_key import get_cipher
 from gerenciador_db import conectar_bd
 
 def gerar_qr_vacina(vacina_id):
-    
     conn = conectar_bd()
     if not conn:
         return None, None
     
     try:
         cur = conn.cursor()
-        cur.execute("" \
-        "SELECT id,nome,fabricante,lote,validade,vacinador" \
-        "FROM vacinas" \
-        "WHERE id = %s" \
-        "",(vacina_id,))
+        cur.execute("""
+            SELECT id, nome, fabricante, lote, validade, vacinador, doses_necessarias
+            FROM vacinas 
+            WHERE id = %s
+        """, (vacina_id,))
         vacina = cur.fetchone()
         cur.close()
         conn.close()

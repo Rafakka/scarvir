@@ -47,28 +47,34 @@ def _dict_vacina(row):
 def get_vacina_por_qr(conteudo_qr):
     if not conteudo_qr:
         return None
+    
+    # Se for bytes (diretamente do QR)
     if isinstance(conteudo_qr, bytes):
         try:
-            cipher = get_cipher()
-            conteudo_qr = cipher.decrypt(conteudo_qr).decode("uft-8")
+            from security.fernet_key import get_decrypt_ciphers
+            for cipher in get_decrypt_ciphers():
+                try:
+                    decrypted = cipher.decrypt(conteudo_qr)
+                    conteudo_qr = json.loads(decrypted.decode('utf-8'))
+                    break
+                except:
+                    continue
         except Exception as e:
-            print("Erro ao descriptografar QR de vacina", e)
+            print("Erro ao descriptografar QR:", e)
             return None
-        if isinstance(conteudo_qr,str):
-            try:
-                conteudo_qr = json.loads(conteudo_qr)
-            except Exception as e:
-                print("Erro ao decodificar QR JSON", e)
-                return None
-        if conteudo_qr.get("kind") != "vaccine":
-            print("QR code não é vacina")
-            return None
-        
-        payload = conteudo_qr.get("payload,{}")
-        vacina_id = payload.get("id")
-        if not vacina_id:
-            print("Id da vacina não encontrado no QR")
-            return None
+    
+    # Verificar se é vacina
+    if not isinstance(conteudo_qr, dict) or conteudo_qr.get("kind") != "vaccine":
+        print("QR code não é de vacina")
+        return None
+    
+    payload = conteudo_qr.get("payload", {})
+    vacina_id = payload.get("id")
+    
+    if not vacina_id:
+        print("ID da vacina não encontrado no QR")
+        return None
+    
     return get_vacina_por_id(vacina_id)
 
 def get_vacina_por_id(vacina_id):
