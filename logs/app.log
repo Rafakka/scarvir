@@ -1,1 +1,4 @@
 {"ts": "2025-09-02T11:14:49Z", "action": "cadastro_usuario", "id_curto": null, "origem": "cli", "success": false, "err": "falha_cadastro", "extra": {}}
+{"ts": "2025-09-02T11:27:30Z", "action": "cadastro_usuario", "id_curto": "92562224", "origem": "cli", "success": true, "err": null, "extra": {}}
+{"ts": "2025-09-02T11:27:47Z", "action": "ler_qr_imagem", "id_curto": "92562224", "origem": "cli", "success": true, "err": null, "extra": {}}
+{"ts": "2025-09-02T11:27:59Z", "action": "busca_cpf", "id_curto": "92562224", "origem": "cli", "success": true, "err": null, "extra": {}}
