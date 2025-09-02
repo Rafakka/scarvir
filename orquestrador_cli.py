@@ -1,6 +1,7 @@
 import os
 from gerenciador_formulario import cadastrar_pessoa
-from gerenciador_db import get_pessoa_por_qr_imagem, get_pessoa_por_qr_camera, get_pessoa_por_cpf
+from gerenciador_db import get_pessoa_por_qr_camera, get_pessoa_por_cpf
+from scanners.qr_scanner import ler_qr_imagem
 from utils.logger import log_event
 
 def menu():
@@ -36,7 +37,7 @@ def main():
                 log_event("cadastro_usuario", id_curto=None, origem="cli", success=False, err="falha_cadastro")
         elif op == "2":
             path = input("Caminho da imagem: ").strip()
-            res = get_pessoa_por_qr_imagem(path)
+            res = ler_qr_imagem(path)
             if res:
                 mostrar_pessoa(res)
                 log_event("leitura_qr_imagem", id_curto=res[-1], origem="cli", success=True)

@@ -33,7 +33,6 @@ def cadastrar_pessoa():
         nome = input("Nome: ").strip()
         dob_str = input("Data de nascimento (DD/MM/AAAA): ").strip()
         cpf_in = input("ID do documento (CPF): ").strip()
-        consentimento = perguntar_consentimento()
 
         # ----- Consentimento -----
         consentimento = perguntar_consentimento()
