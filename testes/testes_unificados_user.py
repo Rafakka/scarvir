@@ -2,7 +2,6 @@ import glob
 import os
 from gerenciador_db import conectar_bd, get_pessoa_por_qr
 from gerenciador_formulario import cadastrar_pessoa
-from testes.teste_id_banco import verificar_id_no_banco
 
 def testar_apenas_leitura_qr():
     """Testa apenas a leitura de QR codes existentes"""
