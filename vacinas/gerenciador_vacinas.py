@@ -2,10 +2,8 @@ from base64 import decode
 from datetime import datetime
 import os
 from tkinter import Image
-import cv2
 import psycopg2
 import json
-import qrcode
 from cryptography.fernet import Fernet
 from security.fernet_key import get_cipher
 from dotenv import load_dotenv
