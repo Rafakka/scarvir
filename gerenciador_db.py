@@ -91,10 +91,16 @@ def get_pessoa_por_cpf(cpf):
 # -----------------------------
 # Função genérica para decodificar QR
 # -----------------------------
+
 def get_pessoa_por_qr(conteudo_qr):
     if not conteudo_qr:
         return None
 
+    # Se for o formato novo {"kind": ..., "payload": {...}}
+    if isinstance(conteudo_qr, dict) and "kind" in conteudo_qr and "payload" in conteudo_qr:
+        # Extrai apenas o payload para compatibilidade
+        conteudo_qr = conteudo_qr["payload"]
+    
     # Se for string (JSON decodificado do QR cifrado), converte para dict
     if isinstance(conteudo_qr, str):
         try:
@@ -108,7 +114,7 @@ def get_pessoa_por_qr(conteudo_qr):
         print("ID curto não encontrado no QR Code")
         return None
 
-    # Busca a pessoa pelo ID curto (já retorna dict)
+    # Busca a pessoa pelo ID curto
     pessoa = get_pessoa_por_id_curto(id_curto)
     if not pessoa:
         print("Pessoa não encontrada no banco para este ID curto")
@@ -116,9 +122,11 @@ def get_pessoa_por_qr(conteudo_qr):
 
     return pessoa
 
+
 # -----------------------------
 # Funções específicas de leitura
 # -----------------------------
+
 def get_pessoa_por_qr_imagem(caminho_imagem):
     conteudo_qr = ler_qr_imagem(caminho_imagem)
     if not conteudo_qr:
@@ -132,4 +140,3 @@ def get_pessoa_por_qr_camera():
         print("Nenhum QR Code detectado na câmera")
         return None
     return get_pessoa_por_qr(conteudo_qr)
-

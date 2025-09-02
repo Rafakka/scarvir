@@ -2,3 +2,16 @@
 {"ts": "2025-09-02T11:27:30Z", "action": "cadastro_usuario", "id_curto": "92562224", "origem": "cli", "success": true, "err": null, "extra": {}}
 {"ts": "2025-09-02T11:27:47Z", "action": "ler_qr_imagem", "id_curto": "92562224", "origem": "cli", "success": true, "err": null, "extra": {}}
 {"ts": "2025-09-02T11:27:59Z", "action": "busca_cpf", "id_curto": "92562224", "origem": "cli", "success": true, "err": null, "extra": {}}
+{"ts": "2025-09-02T15:18:20Z", "action": "busca_cpf", "id_curto": null, "origem": "cli", "success": false, "err": "not_found", "extra": {}}
+{"ts": "2025-09-02T15:18:37Z", "action": "cadastro_usuario", "id_curto": "b04f2872", "origem": "cli", "success": true, "err": null, "extra": {}}
+{"ts": "2025-09-02T15:19:04Z", "action": "ler_qr_imagem", "id_curto": "b04f2872", "origem": "cli", "success": true, "err": null, "extra": {}}
+{"ts": "2025-09-02T16:13:09Z", "action": "cadastro_usuario", "id_curto": "04ac1526", "origem": "cli", "success": true, "err": null, "extra": {}}
+{"ts": "2025-09-02T16:13:29Z", "action": "ler_qr_imagem", "id_curto": "04ac1526", "origem": "cli", "success": true, "err": null, "extra": {}}
+{"ts": "2025-09-02T16:20:34Z", "action": "cadastro_usuario", "id_curto": null, "origem": "cli", "success": false, "err": "canceled_or_error", "extra": {}}
+{"ts": "2025-09-02T16:21:39Z", "action": "cadastro_usuario", "id_curto": "4089831b", "origem": "cli", "success": true, "err": null, "extra": {}}
+{"ts": "2025-09-02T16:21:58Z", "action": "ler_qr_imagem", "id_curto": "4089831b", "origem": "cli", "success": true, "err": null, "extra": {}}
+{"ts": "2025-09-02T16:25:07Z", "action": "ler_qr_imagem", "id_curto": "4089831b", "origem": "cli", "success": true, "err": null, "extra": {}}
+{"ts": "2025-09-02T17:43:11Z", "action": "cadastro_usuario", "id_curto": null, "origem": "cli", "success": false, "err": "canceled_or_error", "extra": {}}
+{"ts": "2025-09-02T17:47:20Z", "action": "ler_qr_imagem", "id_curto": "4089831b", "origem": "cli", "success": true, "err": null, "extra": {}}
+{"ts": "2025-09-02T17:47:36Z", "action": "busca_cpf", "id_curto": "4089831b", "origem": "cli", "success": true, "err": null, "extra": {}}
+{"ts": "2025-09-02T17:51:09Z", "action": "ler_qr_imagem", "id_curto": "4089831b", "origem": "cli", "success": true, "err": null, "extra": {}}

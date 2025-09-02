@@ -9,6 +9,7 @@ import qrcode
 from cryptography.fernet import Fernet
 from security.fernet_key import get_cipher
 from dotenv import load_dotenv
+from PIL import Image
 
 load_dotenv()
 
@@ -45,77 +46,32 @@ def _dict_vacina(row):
         "vacinador": row[6]
     }
 
-
-# Função genérica para decodificar QR cifrado
-
 def get_vacina_por_qr(conteudo_qr):
     if not conteudo_qr:
         return None
-
-    # Se for string (JSON decodificado do QR cifrado), converte para dict
-    if isinstance(conteudo_qr, str):
+    if isinstance(conteudo_qr, bytes):
         try:
-            conteudo_qr = json.loads(conteudo_qr)
+            cipher = get_cipher()
+            conteudo_qr = cipher.decrypt(conteudo_qr).decode("uft-8")
         except Exception as e:
-            print("Erro ao decodificar QR JSON:", e)
+            print("Erro ao descriptografar QR de vacina", e)
             return None
-
-    return conteudo_qr  # já é dict com os dados da vacina
-
-# -----------------------------
-# Funções específicas de leitura
-# -----------------------------
-
-def get_vacina_por_qr_imagem(caminho_imagem):
-    """Lê QR Code da imagem e retorna dict da vacina."""
-    try:
-        img = Image.open(caminho_imagem)
-        result = decode(img)
-        if not result:
-            print("Nenhum QR Code detectado na imagem")
-            return None
-
-        encrypted_bytes = result[0].data
-        cipher = get_cipher()
-        decrypted_bytes = cipher.decrypt(encrypted_bytes)
-        dados_vacina = json.loads(decrypted_bytes)
-        return get_vacina_por_qr(dados_vacina)
-    except Exception as e:
-        print("Erro ao ler QR da imagem:", e)
-        return None
-
-def get_vacina_por_qr_camera():
-    """Lê QR Code via câmera e retorna dict da vacina."""
-    cap = cv2.VideoCapture(0)
-    print("Aproxime o QR Code da vacina da câmera. Pressione 'q' para cancelar.")
-
-    dados_vacina = None
-    cipher = get_cipher()
-
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            continue
-
-        decoded_objs = decode(frame)
-        if decoded_objs:
-            encrypted_bytes = decoded_objs[0].data
+        if isinstance(conteudo_qr,str):
             try:
-                decrypted_bytes = cipher.decrypt(encrypted_bytes)
-                dados_vacina = json.loads(decrypted_bytes)
-                print("QR Code da vacina lido com sucesso!")
+                conteudo_qr = json.loads(conteudo_qr)
             except Exception as e:
-                print("Erro ao decodificar QR Code da vacina:", e)
-            break
-
-        cv2.imshow("Leitura de QR Vacina", frame)
-        if cv2.waitKey(1) & 0xFF == ord("q"):
-            break
-
-    cap.release()
-    cv2.destroyAllWindows()
-    return get_vacina_por_qr(dados_vacina)
-
+                print("Erro ao decodificar QR JSON", e)
+                return None
+        if conteudo_qr.get("kind") != "vaccine":
+            print("QR code não é vacina")
+            return None
+        
+        payload = conteudo_qr.get("payload,{}")
+        vacina_id = payload.get("id")
+        if not vacina_id:
+            print("Id da vacina não encontrado no QR")
+            return None
+    return get_vacina_por_id(vacina_id)
 
 def get_vacina_por_id(vacina_id):
     conn = conectar_bd()

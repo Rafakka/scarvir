@@ -2,25 +2,26 @@ import os
 from datetime import datetime
 from scanners.qr_scanner import ler_qr_imagem 
 from scanners.qr_cam_scanner import ler_qr_camera
-from gerenciador_db import get_pessoa_por_id_curto, get_pessoa_por_cpf, get_pessoa_por_qr, get_pessoa_por_qr_imagem
+from gerenciador_db import get_pessoa_por_id_curto, get_pessoa_por_cpf
 from vacinas.gerenciador_vacinas import (
     get_vacina_por_id,
     get_vacina_por_nome,
-    registrar_dose,
-    get_vacina_por_qr_imagem,
-    get_vacina_por_qr_camera
+    get_vacina_por_qr,
+    registrar_dose
 )
 
 # -----------------------------
 # Encontrar pessoa
 # -----------------------------
+
 def encontrar_pessoa():
     while True:
-        metodo = input("Buscar pessoa por (1) Short ID, (2) CPF, (3) QR Code): ").strip()
+        metodo = input("Buscar pessoa por (1) Short ID, (2) CPF, (3) QR Code: ").strip()
         if metodo not in ("1", "2", "3"):
             print("Opção inválida.")
             continue
 
+        pessoa = None
         if metodo == "1":
             valor = input("Digite o short ID da pessoa: ").strip()
             pessoa = get_pessoa_por_id_curto(valor)
@@ -29,17 +30,30 @@ def encontrar_pessoa():
             pessoa = get_pessoa_por_cpf(valor)
         elif metodo == "3":
             caminho = input("Digite o caminho do QR Code da pessoa ou 'c' para usar câmera: ").strip()
-            if caminho.lower() == 'c':
-                pessoa = get_pessoa_por_qr(ler_qr_camera())
-            else:
-                pessoa = get_pessoa_por_qr(get_pessoa_por_qr_imagem(caminho))
+            conteudo_qr = ler_qr_imagem(caminho) if caminho.lower() != 'c' else ler_qr_camera()
+            
+            if not conteudo_qr:
+                print("Nenhum QR Code detectado, tente novamente.")
+                continue
+
+            if conteudo_qr.get("kind") != "user":
+                print(f"QR Code detectado não é de usuário, é: {conteudo_qr.get('kind')}")
+                continue
+
+            payload = conteudo_qr.get("payload", {})
+            id_curto = payload.get("id_curto")
+            if not id_curto:
+                print("ID curto não encontrado no QR Code")
+                continue
+
+            pessoa = get_pessoa_por_id_curto(id_curto)
 
         if not pessoa:
             print("Pessoa não encontrada, tente novamente.")
             continue
 
         # Confirmação
-        print(f"\nEncontrado: {pessoa['nome']} | DOB: {pessoa.get('dob')} | CPF: {pessoa.get('id_documento')}")
+        print(f"Encontrado: {pessoa['nome']} | DOB: {pessoa.get('dob')} | CPF: {pessoa.get('id_documento')}")
         confirmar = input("É essa pessoa? (s/n): ").strip().lower()
         if confirmar == "s":
             return pessoa
@@ -62,11 +76,8 @@ def escolher_vacina():
             vacina = get_vacina_por_id(valor)
         elif metodo == "3":
             caminho = input("Digite o caminho do QR Code da vacina ou 'c' para usar câmera: ").strip()
-            if caminho.lower() == 'c':
-                vacina = get_vacina_por_qr_camera()
-            else:
-                vacina = get_vacina_por_qr_imagem(caminho)
-
+            conteudo_qr = ler_qr_imagem(caminho) if caminho.lower() != 'c' else ler_qr_camera()
+            vacina = get_vacina_por_qr(conteudo_qr)
         if not vacina:
             print("Vacina não encontrada, tente novamente.")
             continue
