@@ -1,3 +1,4 @@
+from datetime import date
 import os
 import json
 import qrcode
@@ -23,15 +24,20 @@ def gerar_qr_vacina(vacina_id):
         if not vacina:
             print("Vacina não encontrada")
             return None, None
+        validade = vacina[4]
+        if isinstance(validade, date):
+            validade = validade.isoformat()  # Converte para string "YYYY-MM-DD"
         
         vacina_dict = {
-            "id":vacina[0],
-            "nome":vacina[1],
-            "fabricante":vacina[2],
-            "lote":vacina[3],
-            "validade":vacina[4],
-            "vacinador":vacina[5]
+            "id": vacina[0],
+            "nome": vacina[1],
+            "fabricante": vacina[2],
+            "lote": vacina[3],
+            "validade": validade,  # Agora é string
+            "vacinador": vacina[5],
+            "doses_necessarias": vacina[6]
         }
+
 
         qr_dict = {
             "kind":"vaccine",

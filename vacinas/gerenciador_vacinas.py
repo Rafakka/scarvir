@@ -1,5 +1,5 @@
 from base64 import decode
-from datetime import datetime
+from datetime import date, datetime
 import os
 from tkinter import Image
 import psycopg2
@@ -34,13 +34,19 @@ def conectar_bd():
 def _dict_vacina(row):
     if not row:
         return None
+    
+    validade = row[5]
+    
+    if isinstance(validade, date):
+        validade = validade.isoformat()
+    
     return {
         "id": row[0],
         "doses_necessarias": row[1],
         "lote": row[2],
         "nome": row[3],
         "fabricante": row[4],
-        "validade": row[5],
+        "validade": validade,  # Agora é string
         "vacinador": row[6]
     }
 
