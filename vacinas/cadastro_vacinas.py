@@ -4,7 +4,7 @@ from utils.conector_bd import conectar_bd
 
 load_dotenv()
 
-def cadastrar_vacina():
+def cadastrar_vacina(conn):
     """Cadastra uma vacina manualmente no banco."""
     nome = input("Nome da vacina: ").strip()
     fabricante = input("Fabricante: ").strip()
@@ -12,8 +12,6 @@ def cadastrar_vacina():
     validade = input("Validade (AAAA-MM-DD): ").strip()
     vacinador = input("Vacinador responsável: ").strip()
     doses_necessarias = input("Número total de doses necessárias: ").strip()
-
-    conn = conectar_bd()
     if not conn:
         return None
 

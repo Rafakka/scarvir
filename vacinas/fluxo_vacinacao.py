@@ -1,8 +1,6 @@
-import os
 from typing import Optional, Dict, Any
-from datetime import datetime
-from vacinas.qr_vacinas import gerar_qr_vacina
-from vacinas.gerenciador_vacinas import aplicar_vacina, confirmar_aplicacao_vacina, encontrar_vacina, get_vacina_por_qr, get_vacina_por_id, get_vacina_por_nome, perguntar_aplicar_mais, registrar_dose
+from qr_vacinas import gerar_qr_vacina
+from gerenciador_vacinas import aplicar_vacina, confirmar_aplicacao_vacina, encontrar_vacina, perguntar_aplicar_mais
 from gerenciador_db import get_pessoa_por_qr_camera, get_pessoa_por_qr_imagem, get_pessoa_por_id_curto, get_pessoa_por_cpf
 
 def fluxo_vacinacao():

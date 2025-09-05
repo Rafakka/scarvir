@@ -1,7 +1,7 @@
 
-from fluxo_vacinacao import menu_principal
+from vacinas.fluxo_vacinacao import menu_principal
 from gerenciador_formulario import cadastrar_pessoa
-from gerenciador_vacinas import aplicar_vacina
+from vacinas.gerenciador_vacinas import aplicar_vacina
 from sistema_consultas import consulta_pessoas
 from utils.conector_bd import conectar_bd
 from cadastro_vacinas import cadastrar_vacina
