@@ -2,6 +2,7 @@ from datetime import date
 import os
 import json
 import qrcode
+from gerenciador_vacinas import get_vacina_por_id
 from security.fernet_key import get_cipher
 from gerenciador_db import conectar_bd
 
@@ -64,3 +65,82 @@ def gerar_qr_vacina(vacina_id):
     except Exception as e:
         print("Erro ao gerar QR da vacina:", e)
         return None, None
+    
+def ler_qr_camera_vacina():
+        """Lê QR code da câmera para vacina (adaptado)"""
+        from pyzbar.pyzbar import decode
+        import cv2
+        from security.fernet_key import get_decrypt_ciphers
+        import json
+
+        cap = cv2.VideoCapture(0)
+        print("Aproxime o QR Code da vacina da câmera. Pressione 'q' para cancelar.")
+
+        try:
+            while True:
+                ret, frame = cap.read()
+                if not ret:
+                    continue
+
+                decoded_objs = decode(frame)
+                if decoded_objs:
+                    encrypted_bytes = decoded_objs[0].data
+                    return encrypted_bytes  # Retorna bytes cifrados
+
+                cv2.imshow("Leitura de QR Vacina", frame)
+                if cv2.waitKey(1) & 0xFF == ord("q"):
+                    break
+        finally:
+            cap.release()
+            cv2.destroyAllWindows()
+        
+        return None
+
+def ler_qr_imagem_vacina(caminho_imagem):
+    """Lê QR code de imagem para vacina (adaptado)"""
+    from pyzbar.pyzbar import decode
+    from PIL import Image
+    import json
+
+    try:
+        img = Image.open(caminho_imagem)
+        result = decode(img)
+        if result:
+            return result[0].data  # Retorna bytes cifrados
+        return None
+    except Exception as e:
+        print(f"Erro ao ler imagem: {e}")
+        return None
+    
+def get_vacina_por_qr(conteudo_qr):
+    if not conteudo_qr:
+        return None
+    
+    # Se for bytes (diretamente do QR)
+    if isinstance(conteudo_qr, bytes):
+        try:
+            from security.fernet_key import get_decrypt_ciphers
+            for cipher in get_decrypt_ciphers():
+                try:
+                    decrypted = cipher.decrypt(conteudo_qr)
+                    conteudo_qr = json.loads(decrypted.decode('utf-8'))
+                    break
+                except:
+                    continue
+        except Exception as e:
+            print("Erro ao descriptografar QR:", e)
+            return None
+    
+    # Verificar se é vacina
+    if not isinstance(conteudo_qr, dict) or conteudo_qr.get("kind") != "vaccine":
+        print("QR code não é de vacina")
+        return None
+    
+    payload = conteudo_qr.get("payload", {})
+    vacina_id = payload.get("id")
+    
+    if not vacina_id:
+        print("ID da vacina não encontrado no QR")
+        return None
+    
+    return get_vacina_por_id(vacina_id)

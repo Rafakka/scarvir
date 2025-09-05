@@ -1,17 +1,8 @@
 import os
-import psycopg2
-from datetime import datetime
 from scanners.qr_generator import gerar_qr_usuario
-from dotenv import load_dotenv
+from utils.conector_bd import conectar_bd
 from validator import validar_cpf, limpar_cpf, validar_e_normalizar_dob, formatar_cpf
 from security.fernet_key import get_cipher
-
-# Carrega variáveis do .env
-load_dotenv()
-DB_NAME = os.getenv("DB_NAME")
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_HOST = os.getenv("DB_HOST")
 
 def formatar_data(dob_str):
     partes = dob_str.strip().split("/")
@@ -27,7 +18,7 @@ def perguntar_consentimento() -> bool:
             return r == "s"
         print("Resposta inválida. Digite 's' para sim ou 'n' para não.")
 
-def cadastrar_pessoa():
+def cadastrar_pessoa(conn):
     try:
         # ----- Entrada de dados -----
         nome = input("Nome: ").strip()
@@ -53,7 +44,6 @@ def cadastrar_pessoa():
     cpf = limpar_cpf(cpf_in)
 
     try:
-        conn = psycopg2.connect(dbname=DB_NAME, user=DB_USER, password=DB_PASSWORD, host=DB_HOST)
         cur = conn.cursor()
         cur.execute("""
             INSERT INTO pessoas (nome, dob, id_documento, data_de_criacao, id_curto, consentimento, consentimento_data)
@@ -62,11 +52,12 @@ def cadastrar_pessoa():
         """, (nome, dob_formatada, cpf, True))
         id_curto = cur.fetchone()[0]
         conn.commit()
-        cur.close(); conn.close()
+        cur.close()
+
     except Exception as e:
         print("Erro ao salvar no banco:", e)
         return None, None
-
+    
     # 4) Gera QR cifrado (somente com consentimento)
     try:
         os.makedirs("qrcodes", exist_ok=True)

@@ -4,32 +4,12 @@ import psycopg2
 import json
 from scanners.qr_scanner import ler_qr_imagem
 from scanners.qr_cam_scanner import ler_qr_camera
-from dotenv import load_dotenv
+
+from utils.conector_bd import conectar_bd
 
 # -----------------------------
 # Carregar variáveis do .env
 # -----------------------------
-load_dotenv()
-DB_NAME = os.getenv("DB_NAME")
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_HOST = os.getenv("DB_HOST")
-
-# -----------------------------
-# Conexão centralizada com o banco
-# -----------------------------
-def conectar_bd():
-    try:
-        return psycopg2.connect(
-            dbname=DB_NAME,
-            user=DB_USER,
-            password=DB_PASSWORD,
-            host=DB_HOST
-        )
-    except Exception as e:
-        print("Erro ao conectar ao banco:", e)
-        return None
-
 
 def _dict_pessoa(row):
     if not row:

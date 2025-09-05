@@ -2,7 +2,7 @@ import os
 from typing import Optional, Dict, Any
 from datetime import datetime
 from vacinas.qr_vacinas import gerar_qr_vacina
-from vacinas.gerenciador_vacinas import get_vacina_por_qr, get_vacina_por_id, get_vacina_por_nome, registrar_dose
+from vacinas.gerenciador_vacinas import aplicar_vacina, confirmar_aplicacao_vacina, encontrar_vacina, get_vacina_por_qr, get_vacina_por_id, get_vacina_por_nome, perguntar_aplicar_mais, registrar_dose
 from gerenciador_db import get_pessoa_por_qr_camera, get_pessoa_por_qr_imagem, get_pessoa_por_id_curto, get_pessoa_por_cpf
 
 def fluxo_vacinacao():
@@ -132,160 +132,7 @@ def aplicar_vacinas_usuario(pessoa: Dict[str, Any]):
         if not perguntar_aplicar_mais():
             break
 
-def encontrar_vacina() -> Optional[Dict[str, Any]]:
-    """Encontra vacina por QR, ID ou nome"""
-    
-    while True:
-        print("\n🔍 Buscar vacina por:")
-        print("1 - QR Code (câmera)")
-        print("2 - QR Code (imagem)")
-        print("3 - ID da vacina")
-        print("4 - Nome da vacina")
-        print("0 - Voltar")
-        
-        opcao = input("Opção: ").strip()
-        
-        if opcao == '0':
-            return None
-        
-        elif opcao == '1':
-            # Usando sua função get_vacina_por_qr adaptada
-            from vacinas.gerenciador_vacinas import get_vacina_por_qr
-            conteudo_qr = ler_qr_camera_vacina()
-            if conteudo_qr:
-                vacina = get_vacina_por_qr(conteudo_qr)
-                if vacina:
-                    return vacina
-            print("❌ Vacina não encontrada via QR.")
-        
-        elif opcao == '2':
-            caminho = input("Caminho da imagem QR: ").strip()
-            from vacinas.gerenciador_vacinas import get_vacina_por_qr
-            conteudo_qr = ler_qr_imagem_vacina(caminho)
-            if conteudo_qr:
-                vacina = get_vacina_por_qr(conteudo_qr)
-                if vacina:
-                    return vacina
-            print("❌ Vacina não encontrada na imagem.")
-        
-        elif opcao == '3':
-            vacina_id = input("ID da vacina: ").strip()
-            vacina = get_vacina_por_id(vacina_id)
-            if vacina:
-                return vacina
-            print("❌ Vacina não encontrada.")
-        
-        elif opcao == '4':
-            nome_vacina = input("Nome da vacina: ").strip()
-            vacina = get_vacina_por_nome(nome_vacina)
-            if vacina:
-                return vacina
-            print("❌ Vacina não encontrada.")
-        
-        else:
-            print("❌ Opção inválida.")
 
-def ler_qr_camera_vacina():
-    """Lê QR code da câmera para vacina (adaptado)"""
-    from pyzbar.pyzbar import decode
-    import cv2
-    from security.fernet_key import get_decrypt_ciphers
-    import json
-
-    cap = cv2.VideoCapture(0)
-    print("Aproxime o QR Code da vacina da câmera. Pressione 'q' para cancelar.")
-
-    try:
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                continue
-
-            decoded_objs = decode(frame)
-            if decoded_objs:
-                encrypted_bytes = decoded_objs[0].data
-                return encrypted_bytes  # Retorna bytes cifrados
-
-            cv2.imshow("Leitura de QR Vacina", frame)
-            if cv2.waitKey(1) & 0xFF == ord("q"):
-                break
-    finally:
-        cap.release()
-        cv2.destroyAllWindows()
-    
-    return None
-
-def ler_qr_imagem_vacina(caminho_imagem):
-    """Lê QR code de imagem para vacina (adaptado)"""
-    from pyzbar.pyzbar import decode
-    from PIL import Image
-    import json
-
-    try:
-        img = Image.open(caminho_imagem)
-        result = decode(img)
-        if result:
-            return result[0].data  # Retorna bytes cifrados
-        return None
-    except Exception as e:
-        print(f"Erro ao ler imagem: {e}")
-        return None
-
-def confirmar_aplicacao_vacina(vacina: Dict[str, Any], pessoa: Dict[str, Any]) -> bool:
-    """Confirma aplicação da vacina"""
-    
-    print(f"\n💉 Vacina selecionada:")
-    print(f"ID: {vacina['id']}")
-    print(f"Nome: {vacina['nome']}")
-    print(f"Fabricante: {vacina['fabricante']}")
-    print(f"Lote: {vacina['lote']}")
-    print(f"Validade: {vacina['validade']}")
-    print(f"Vacinador: {vacina['vacinador']}")
-    print(f"Doses necessárias: {vacina['doses_necessarias']}")
-    print(f"Para: {pessoa['nome']}")
-    
-    while True:
-        resposta = input("\nAplicar esta vacina? (s/n/0 para sair): ").strip().lower()
-        if resposta in ['s', 'sim']:
-            return True
-        elif resposta in ['n', 'não', 'nao']:
-            print("Busque outra vacina.")
-            return False
-        elif resposta == '0':
-            return False
-        else:
-            print("Resposta inválida. Digite 's', 'n' ou '0'.")
-
-def aplicar_vacina(vacina: Dict[str, Any], pessoa: Dict[str, Any]):
-    """Registra a aplicação da vacina no banco"""
-    
-    vacinador = input("Nome do vacinador que está aplicando: ").strip()
-    if not vacinador:
-        print("❌ Nome do vacinador é obrigatório.")
-        return
-    
-    # Usa sua função registrar_dose
-    sucesso = registrar_dose(pessoa['id'], vacina['id'], vacinador)
-    
-    if sucesso:
-        print(f"✅ Dose aplicada com sucesso!")
-        print(f"📋 Registrado por: {vacinador}")
-        print(f"💉 Vacina: {vacina['nome']}")
-        print(f"👤 Paciente: {pessoa['nome']}")
-    else:
-        print("❌ Erro ao registrar dose no banco.")
-
-def perguntar_aplicar_mais() -> bool:
-    """Pergunta se quer aplicar mais vacinas"""
-    while True:
-        resposta = input("\nAplicar outra vacina para este usuário? (s/n): ").strip().lower()
-        if resposta in ['s', 'sim']:
-            return True
-        elif resposta in ['n', 'não', 'nao']:
-            print("Retornando ao menu principal...")
-            return False
-        else:
-            print("Resposta inválida. Digite 's' ou 'n'.")
 
 # Menu principal para escolher entre cadastrar vacina ou aplicar
 def menu_principal():
@@ -325,7 +172,3 @@ def menu_principal():
         
         else:
             print("❌ Opção inválida")
-
-# Execução principal
-if __name__ == "__main__":
-    menu_principal()

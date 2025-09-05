@@ -1,6 +1,6 @@
-import os
 from typing import Optional, Dict, Any, List
 from gerenciador_db import get_pessoa_por_qr_camera, get_pessoa_por_qr_imagem, get_pessoa_por_id_curto, get_pessoa_por_cpf
+from utils.conector_bd import conectar_bd
 
 def consulta_pessoas():
     """Sistema de consulta de pessoas e vacinas"""
@@ -156,20 +156,6 @@ def perguntar_nova_consulta() -> bool:
         else:
             print("❌ Resposta inválida. Digite 's' ou 'n'.")
 
-def conectar_bd():
-    """Conexão com banco de dados"""
-    try:
-        import psycopg2
-        return psycopg2.connect(
-            dbname=os.getenv("DB_NAME"),
-            user=os.getenv("DB_USER"),
-            password=os.getenv("DB_PASSWORD"),
-            host=os.getenv("DB_HOST")
-        )
-    except Exception as e:
-        print("❌ Erro ao conectar ao banco:", e)
-        return None
-
 def menu_consultas():
     """Menu principal do sistema de consultas"""
     
@@ -200,10 +186,9 @@ def menu_consultas():
         else:
             print("❌ Opção inválida")
 
-def listar_todas_vacinas():
+def listar_todas_vacinas(conn):
     """Lista todas as vacinas cadastradas no sistema"""
     
-    conn = conectar_bd()
     if not conn:
         return
     
@@ -216,9 +201,7 @@ def listar_todas_vacinas():
         """)
         
         vacinas = cur.fetchall()
-        cur.close()
-        conn.close()
-        
+
         print(f"\n💉 VACINAS CADASTRADAS: {len(vacinas)}")
         print("=" * 50)
         
@@ -234,10 +217,9 @@ def listar_todas_vacinas():
     except Exception as e:
         print(f"❌ Erro ao listar vacinas: {e}")
 
-def mostrar_estatisticas():
+def mostrar_estatisticas(conn):
     """Mostra estatísticas gerais do sistema"""
     
-    conn = conectar_bd()
     if not conn:
         return
     

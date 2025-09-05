@@ -1,28 +1,9 @@
-import os
-import psycopg2
-from datetime import datetime
+
 from dotenv import load_dotenv
+from utils.conector_bd import conectar_bd
 
 load_dotenv()
 
-DB_NAME = os.getenv("DB_NAME")
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_HOST = os.getenv("DB_HOST")
-
-def conectar_bd():
-    try:
-        return psycopg2.connect(
-            dbname=DB_NAME,
-            user=DB_USER,
-            password=DB_PASSWORD,
-            host=DB_HOST
-        )
-    except Exception as e:
-        print("Erro ao conectar no BD:", e)
-        return None
-
-    
 def cadastrar_vacina():
     """Cadastra uma vacina manualmente no banco."""
     nome = input("Nome da vacina: ").strip()
